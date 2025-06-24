@@ -149,7 +149,35 @@ class Bomb:
             self.vy *= -1
         self.rct.move_ip(self.vx, self.vy)
         screen.blit(self.img, self.rct)
+class Explosion:
+    """
+    爆発エフェクトに関するクラス
+    """
+    def __init__(self, center: tuple[int, int]):
+        """
+        爆発画像Surfaceを生成する
+        引数 center：爆発の中心座標
+        """
+        ex_img = pg.image.load("fig/explosion.gif")  #爆発gifを読み込む
+        self.imgs = [
+            ex_img,
+            pg.transform.flip(ex_img, True, False),
+            pg.transform.flip(ex_img, False, True),
+        ]
+        self.life = 30  # 爆発の表示時間
+        self.rct = self.imgs[0].get_rect()
+        self.rct.center = center
 
+    def update(self, screen: pg.Surface):
+        """
+        爆発画像を交互に反転表示して爆発演出
+        引数 screen：画面Surface
+        """
+        self.life -= 1  #爆発経過時間を1減算
+        img = self.imgs[self.life % len(self.imgs)]  
+        screen.blit(img, self.rct)
+
+ 
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -160,6 +188,7 @@ def main():
     bomb = Bomb((255, 0, 0), 10)
     bombs=[] #  爆弾用の空のリスト
     beams=[] #  ビーム用のリスト
+    explosions = []  # Explosionインスタンス用の空のリスト
     for _ in range(NUM_OF_BOMBS):
         bombs.append(Bomb((255,0,0),10))
     #  内包表記    
@@ -178,6 +207,7 @@ def main():
         for n2,bomb2 in enumerate(bombs):
             for n,beam2 in enumerate(beams):
                 if bomb2.rct.colliderect(beam2.rct):
+                    explosions.append(Explosion(bombs[n2].rct.center))  #爆発追加
                     bombs[n2]=None
                     beams[n]=None
                     bird.change_img(6, screen)
@@ -185,7 +215,14 @@ def main():
                     pg.display.update()
             beams = [beam for beam in beams if beam is not None]        
         bombs=[bomb for bomb in bombs if bomb is not None]        
-            
+
+        new_explosions = []
+        for ex in explosions:
+            if ex.life > 0: # 爆発時間が0以上なら表示
+                ex.update(screen)
+                new_explosions.append(ex)
+        explosions = new_explosions # 新しい画像に置き換える
+
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
