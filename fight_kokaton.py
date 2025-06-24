@@ -159,6 +159,7 @@ def main():
     bird = Bird((300, 200))
     bomb = Bomb((255, 0, 0), 10)
     bombs=[] #  爆弾用の空のリスト
+    beams=[] #  ビーム用のリスト
     for _ in range(NUM_OF_BOMBS):
         bombs.append(Bomb((255,0,0),10))
     #  内包表記    
@@ -171,9 +172,20 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird))                
         screen.blit(bg_img, [0, 0])
-        
+
+        for n2,bomb2 in enumerate(bombs):
+            for n,beam2 in enumerate(beams):
+                if bomb2.rct.colliderect(beam2.rct):
+                    bombs[n2]=None
+                    beams[n]=None
+                    bird.change_img(6, screen)
+                    score.value+=1
+                    pg.display.update()
+            beams = [beam for beam in beams if beam is not None]        
+        bombs=[bomb for bomb in bombs if bomb is not None]        
+            
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
@@ -185,21 +197,24 @@ def main():
                 time.sleep(1)
                 return
 
-        for i,bomb in enumerate(bombs):
-            if beam is not None:
-                if beam.rct.colliderect(bomb.rct): #  ビームと爆弾が衝突したら
-                    beam=None
-                    bombs[i]=None
-                    bird.change_img(6, screen)
-                    score.value+=1
-        bombs=[bomb for bomb in bombs if bomb is not None]
+        # for i,bomb in enumerate(bombs):
+        #     if beam is not None:
+        #         if beam.rct.colliderect(bomb.rct): #  ビームと爆弾が衝突したら
+        #             beam=None
+        #             bombs[i]=None
+        #             bird.change_img(6, screen)
+        #             score.value+=1
+        
 
         score.update(screen)
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None: #  ビームが存在する時
-            beam.update(screen)   
+        for i,beam in enumerate(beams):
+            if check_bound(beam.rct)==(False,False): #  ビームが存在する時
+                del beams[i]
+            else:    
+                beam.update(screen)   
         for bomb in bombs:    
             bomb.update(screen)
         pg.display.update()
