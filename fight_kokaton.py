@@ -1,3 +1,4 @@
+import math
 import os
 import random
 import sys
@@ -53,6 +54,7 @@ class Bird:
         こうかとん画像Surfaceを生成する
         引数 xy：こうかとん画像の初期位置座標タプル
         """
+        self.dire = (+5, 0)
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
@@ -79,7 +81,9 @@ class Bird:
                 sum_mv[1] += mv[1]
         self.rct.move_ip(sum_mv)
         if check_bound(self.rct) != (True, True):
-            self.rct.move_ip(-sum_mv[0], -sum_mv[1])
+            self.rct.move_ip(-sum_mv[0], -sum_mv[1]) 
+        if not sum_mv==[0,0]:
+            self.dire=sum_mv      
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.img = __class__.imgs[tuple(sum_mv)]
         screen.blit(self.img, self.rct)
@@ -93,7 +97,12 @@ class Beam:
         ビーム画像Surfaceを生成する
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
         """
+        # super().__init__()
+        # self.vx, self.vy = bird.dire
+        # th      =math.atan2(-self.vy,self.vx)
+        # angle=math.degrees(th)
         self.img = pg.image.load(f"fig/beam.png")
+        # pg.rotozoom
         self.rct = self.img.get_rect()
         self.rct.centery = bird.rct.centery
         self.rct.left = bird.rct.right #ビームの左座標＝こうかとんの右座標
@@ -116,6 +125,8 @@ class Score:
         self.img = self.fonto.render(f"スコア: {self.value}", 0, self.color)
         self.rect = self.img.get_rect()
         self.rect.center = 100, HEIGHT-50 
+
+        
    def update(self, screen: pg.Surface):
         self.img = self.fonto.render(f"スコア: {self.value}", 0, self.color)
         screen.blit(self.img, self.rect)
